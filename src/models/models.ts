@@ -1,13 +1,13 @@
 
 export type Game = {
-    id: string;
-    devices: Device[];
+    // id: string;
+    devices?: { [key: string]: Device };
     gameover: boolean;
     round: number;
-    currentTargetDevice: string;
+    currentTargetDevice?: number;
 }
 
 export type Device = {
-    id: string;
+    id: number;
     isHost: boolean;
 }
