@@ -24,10 +24,27 @@ import {
   getGameUrl,
   setPoints,
 } from "../game.data";
+import { useEffect, useRef, useState } from "react";
 
 export function GamePage() {
   const { gameId } = useParams();
   invariant(gameId, "gameId is required");
+
+  const [isPlayingSound, setIsPlayingSound] = useState(false);
+
+  // candidate for custom Hook
+  const audioRef = useRef(new Audio("/Alert chime.mp3"));
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (isPlayingSound) {
+      audio.loop = true;
+      audio.play();
+      console.log("play");
+    } else {
+      audio.pause();
+    }
+  }, [audioRef, isPlayingSound]);
 
   const { game } = useGame(gameId);
   if (game && !amIInThisGame(game)) {
@@ -42,17 +59,16 @@ export function GamePage() {
   }
 
   function onRestart() {
-    if (gameId && game) {
-      restartGame(gameId, game);
-    }
+    invariant(gameId);
+    invariant(game);
+    restartGame(gameId, game);
   }
 
   function onBuzzForDevice(game: Game) {
-    if (gameId && game) {
-      const deviceId = getCurrentDeviceId();
-      if (isCurrentlySelectedDevice(game, deviceId)) {
-        setPoints(gameId, game.points + 1);
-      }
+    invariant(gameId);
+    const deviceId = getCurrentDeviceId();
+    if (isCurrentlySelectedDevice(game, deviceId)) {
+      setPoints(gameId, game.points + 1);
     }
   }
 
@@ -65,31 +81,32 @@ export function GamePage() {
   }
 
   async function playRound(game: Game) {
-    if (gameId) {
-      console.log("Round", game.round, game.numberOfRounds);
-      if (game.round + 1 >= game.numberOfRounds) {
-        console.log("Over");
-        return;
-      }
-
-      const roundDuration = getRandomRoundDuration();
-      const nextDevice = selectNextDevice(game, devices);
-      console.log("nextDevice", nextDevice);
-      setCurrentTargetDevice(gameId, nextDevice.id);
-
-      console.log("Run to the device!", game);
-      await asyncTimeout(roundDuration);
-      console.log("buzzz!");
-      await asyncTimeout(roundDuration);
-
-      game.round++;
-      setRound(gameId, game.round);
-      playRound(game);
+    invariant(gameId, "gameId is required");
+    console.log("Round", game.round, game.numberOfRounds);
+    if (game.round + 1 >= game.numberOfRounds) {
+      console.log("Over");
+      setIsPlayingSound(false);
+      return;
     }
+
+    const roundDuration = getRandomRoundDuration();
+    const nextDevice = selectNextDevice(game, devices);
+    console.log("nextDevice", nextDevice);
+    setCurrentTargetDevice(gameId, nextDevice.id);
+
+    if (thisDeviceIsCurrentlySelected(game)) {
+      setIsPlayingSound(true);
+    }
+
+    console.log("Run to the device!", game);
+    await asyncTimeout(roundDuration);
+
+    game.round++;
+    setRound(gameId, game.round);
+    playRound(game);
   }
 
   const { devices } = useDevices(gameId);
-  console.log("devices", devices);
   return (
     <div>
       <div>Url: {getGameUrl(gameId)}</div>
