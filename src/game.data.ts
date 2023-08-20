@@ -3,10 +3,26 @@ import { getDb } from "./firebase";
 import { Device, Game } from "./models/models";
 import invariant from "tiny-invariant";
 import { useList, useObject } from "react-firebase-hooks/database";
+import { getCurrentDeviceId } from "./helpers/game.helpers";
 
 export function createNewGame(): string {
   const newGame: Game = {
+    devices: {
+      aaa: {
+        id: 234234,
+        isHost: false,
+      },
+      bbb: {
+        id: 346346,
+        isHost: false,
+      },
+      ccc: {
+        id: 3463246,
+        isHost: false,
+      },
+    },
     gameover: false,
+    numberOfRounds: 4,
     round: 0,
   };
 
@@ -22,6 +38,14 @@ export function createNewGame(): string {
   return newGameRef.key;
 }
 
+export function restartGame(gameId: string, game: Game) {
+  const db = getDb();
+  game.gameover = false;
+  game.round = 0;
+  game.currentTargetDevice = -1;
+  set(ref(db, `games/${gameId}`), game);
+}
+
 export function getGameRef(gameId: string) {
   const db = getDb();
   const gameRef = ref(db, `games/${gameId}`);
@@ -30,6 +54,21 @@ export function getGameRef(gameId: string) {
 
 export function getGameUrl(gameId: string) {
   return `${window.location.origin}/game/${gameId}`;
+}
+
+export function setCurrentTargetDevice(gameId: string, deviceId: number) {
+  const db = getDb();
+  set(ref(db, `games/${gameId}/currentTargetDevice`), deviceId);
+}
+
+export function setRound(gameId: string, round: number) {
+  const db = getDb();
+  set(ref(db, `games/${gameId}/round`), round);
+}
+
+export function setGameOver(gameId: string) {
+  const db = getDb();
+  set(ref(db, `games/${gameId}/gameover`), true);
 }
 
 export function useGame(gameId: string) {
@@ -61,37 +100,6 @@ export function amIInThisGame(game: Game) {
   return !game.devices || game.devices[deviceId] !== undefined;
 }
 
-export function isThisDevice(device: Device) {
-  if (device.id === getCurrentDeviceId()) {
-    return true;
-  }
-  return false;
-}
-
-export function isCurrentlySelectedDevice(game: Game) {
-    const deviceId = getCurrentDeviceId();
-    return game.currentTargetDevice === deviceId;
-}
-
 function getNewGameRef(db: Database) {
   return push(ref(db, "games"));
-}
-
-function getCurrentDeviceId() {
-  const deviceId = sessionStorage.getItem("deviceId");
-  if (deviceId) {
-    return parseInt(deviceId);
-  } else {
-    return generateCurrentDeviceId();
-  }
-}
-
-function generateCurrentDeviceId() {
-  const deviceId = getNewDeviceId();
-  sessionStorage.setItem("deviceId", deviceId.toString());
-  return deviceId;
-}
-
-function getNewDeviceId() {
-  return self.crypto.getRandomValues(new Uint32Array(1))[0];
 }
