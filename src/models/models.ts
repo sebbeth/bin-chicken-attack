@@ -4,6 +4,7 @@ export type Game = {
   gameover: boolean;
   round: number;
   numberOfRounds: number;
+  points: number;
   currentTargetDevice?: number;
 };
 

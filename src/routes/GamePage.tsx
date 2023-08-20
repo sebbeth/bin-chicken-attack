@@ -5,6 +5,7 @@ import { Device, Game } from "../models/models";
 import {
   canRestart,
   canStart,
+  getCurrentDeviceId,
   getRandomRoundDuration,
   isCurrentlySelectedDevice,
   isThisDevice,
@@ -21,6 +22,7 @@ import {
   setRound,
   useDevices,
   getGameUrl,
+  setPoints,
 } from "../game.data";
 
 export function GamePage() {
@@ -42,6 +44,15 @@ export function GamePage() {
   function onRestart() {
     if (gameId && game) {
       restartGame(gameId, game);
+    }
+  }
+
+  function onBuzzForDevice(game: Game) {
+    if (gameId && game) {
+      const deviceId = getCurrentDeviceId();
+      if (isCurrentlySelectedDevice(game, deviceId)) {
+        setPoints(gameId, game.points + 1);
+      }
     }
   }
 
@@ -68,6 +79,8 @@ export function GamePage() {
 
       console.log("Run to the device!", game);
       await asyncTimeout(roundDuration);
+      console.log("buzzz!");
+      await asyncTimeout(roundDuration);
 
       game.round++;
       setRound(gameId, game.round);
@@ -82,6 +95,10 @@ export function GamePage() {
       <div>Url: {getGameUrl(gameId)}</div>
       {game && devices && (
         <>
+          {thisDeviceIsCurrentlySelected(game) && (
+            <button onClick={() => onBuzzForDevice(game)}>Tap!</button>
+          )}
+          <div>Points: {game.points}</div>
           <div>Devices:</div>
           <ul>
             {devices.map((device) => {

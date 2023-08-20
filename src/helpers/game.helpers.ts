@@ -7,6 +7,29 @@ export function getRandomRoundDuration() {
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
+export function getNewGame(): Game {
+  return {
+    devices: {
+      aaa: {
+        id: 234234,
+        isHost: false,
+      },
+      bbb: {
+        id: 346346,
+        isHost: false,
+      },
+      ccc: {
+        id: 3463246,
+        isHost: false,
+      },
+    },
+    gameover: false,
+    numberOfRounds: 10,
+    points: 0,
+    round: 0,
+  };
+}
+
 // select a random device from the list of devices that is NOT the currently selected device
 export function selectNextDevice(game: Game, devices: Device[]) {
   const currentDeviceId = game.currentTargetDevice;

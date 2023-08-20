@@ -3,28 +3,10 @@ import { getDb } from "./firebase";
 import { Device, Game } from "./models/models";
 import invariant from "tiny-invariant";
 import { useList, useObject } from "react-firebase-hooks/database";
-import { getCurrentDeviceId } from "./helpers/game.helpers";
+import { getCurrentDeviceId, getNewGame } from "./helpers/game.helpers";
 
 export function createNewGame(): string {
-  const newGame: Game = {
-    devices: {
-      aaa: {
-        id: 234234,
-        isHost: false,
-      },
-      bbb: {
-        id: 346346,
-        isHost: false,
-      },
-      ccc: {
-        id: 3463246,
-        isHost: false,
-      },
-    },
-    gameover: false,
-    numberOfRounds: 4,
-    round: 0,
-  };
+  const newGame = getNewGame();
 
   const db = getDb();
   // Add a row to the games list
@@ -40,10 +22,9 @@ export function createNewGame(): string {
 
 export function restartGame(gameId: string, game: Game) {
   const db = getDb();
-  game.gameover = false;
-  game.round = 0;
-  game.currentTargetDevice = -1;
-  set(ref(db, `games/${gameId}`), game);
+  const newGame = getNewGame();
+  game.devices = game.devices || {};
+  set(ref(db, `games/${gameId}`), newGame);
 }
 
 export function getGameRef(gameId: string) {
@@ -59,6 +40,11 @@ export function getGameUrl(gameId: string) {
 export function setCurrentTargetDevice(gameId: string, deviceId: number) {
   const db = getDb();
   set(ref(db, `games/${gameId}/currentTargetDevice`), deviceId);
+}
+
+export function setPoints(gameId: string, points: number) {
+  const db = getDb();
+  set(ref(db, `games/${gameId}/points`), points);
 }
 
 export function setRound(gameId: string, round: number) {
